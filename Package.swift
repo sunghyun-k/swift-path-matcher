@@ -18,6 +18,9 @@ let package = Package(
         .target(
             name: "PathMatcher"
         ),
-
+        .testTarget(
+            name: "PathMatcherTests",
+            dependencies: ["PathMatcher"]
+        ),
     ]
 )
