@@ -1,7 +1,8 @@
 import Foundation
 
 // MARK: - PathComponent Protocol
+
 public protocol PathComponent<Output> {
-  associatedtype Output
-  var matcher: PathMatcherCore<Output> { get }
+    associatedtype Output
+    var matcher: PathMatcherCore<Output> { get }
 }
