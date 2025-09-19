@@ -20,7 +20,7 @@ import Foundation
 /// ```swift
 /// struct CustomComponent: PathComponent {
 ///     typealias Output = String
-///     
+///
 ///     var matcher: PathMatcherCore<String> {
 ///         PathMatcherCore { components, index in
 ///             // Your custom matching logic
@@ -31,7 +31,7 @@ import Foundation
 public protocol PathComponent<Output> {
     /// The type of value this component produces when it matches successfully.
     associatedtype Output
-    
+
     /// The core matcher that implements the matching logic for this component.
     var matcher: PathMatcherCore<Output> { get }
 }

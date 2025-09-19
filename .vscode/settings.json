@@ -1,0 +1,8 @@
+{
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "[swift]": {
+        "editor.defaultFormatter": "vknabel.vscode-swiftformat",
+    },
+}
