@@ -189,7 +189,7 @@ if let userID = userMatcher.match(pathComponents) {
 
 ## Requirements
 
-- **Swift**: 5.9 or later
+- **Swift**: 6.1 or later
 
 ## Contributing
 
