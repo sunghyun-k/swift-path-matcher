@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "PathMatcher",
+    name: "swift-path-matcher",
     products: [
         .library(
             name: "PathMatcher",
