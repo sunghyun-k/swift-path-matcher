@@ -34,7 +34,7 @@ import PathMatcher
 
 // Extract path components from URL
 let url = URL(string: "https://github.com/settings/profile")!
-let pathComponents = Array(url.pathComponents.dropFirst())
+let pathComponents = Array(url.pathComponents.dropFirst()) // ["settings", "profile"]
 
 // Create a simple matcher
 let profileSettingsMatcher: PathMatcher<Void> = PathMatcher {
