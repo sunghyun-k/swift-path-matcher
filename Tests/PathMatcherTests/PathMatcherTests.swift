@@ -28,22 +28,22 @@ struct PathMatcherTests {
 
     @Test("Parameter matching")
     func parameterMatching() {
-        // users/:owner
-        let userComps = ["users", "swiftlang"]
-        let userMatcher: PathMatcher<String> = PathMatcher {
-            Literal("users")
+        // owners/:owner
+        let ownerComps = ["owners", "swiftlang"]
+        let ownerMatcher: PathMatcher<String> = PathMatcher {
+            Literal("owners")
             Parameter() // owner
         }
-        let userResult = userMatcher.match(userComps)
-        #expect(userResult == "swiftlang", "Should capture parameter value")
+        let ownerResult = ownerMatcher.match(ownerComps)
+        #expect(ownerResult == "swiftlang", "Should capture parameter value")
     }
 
     @Test("Optional parameter matching with both parameters")
     func optionalParameterMatchingWithBoth() {
-        // users/:owner/:repo (repo 있는 경우)
-        let repoComps = ["users", "swiftlang", "swift"]
+        // owners/:owner/:repo (repo 있는 경우)
+        let repoComps = ["owners", "swiftlang", "swift"]
         let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("users")
+            Literal("owners")
             Parameter() // owner
             OptionalParameter() // repo
         }
@@ -54,14 +54,14 @@ struct PathMatcherTests {
 
     @Test("Optional parameter matching without optional parameter")
     func optionalParameterMatchingWithoutOptional() {
-        // users/:owner/:repo (repo 없는 경우)
-        let userComps = ["users", "swiftlang"]
+        // owners/:owner/:repo (repo 없는 경우)
+        let ownerComps = ["owners", "swiftlang"]
         let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("users")
+            Literal("owners")
             Parameter() // owner
             OptionalParameter() // repo
         }
-        let repoResult = repoMatcher.match(userComps)
+        let repoResult = repoMatcher.match(ownerComps)
         #expect(repoResult?.0 == "swiftlang", "Should capture owner parameter")
         #expect(repoResult?.1 == nil, "Optional repo parameter should be nil")
     }
@@ -173,33 +173,33 @@ struct PathMatcherTests {
 
     @Test("Complex path matching - simpler version")
     func complexPathMatching() {
-        // Simpler path: users/:userId/repos
+        // Simpler path: owners/:ownerId/repos
         let complexMatcher: PathMatcher<String> = PathMatcher {
-            Literal("users")
-            Parameter() // userId
+            Literal("owners")
+            Parameter() // ownerId
             Literal("repos")
         }
 
-        let complexComps = ["users", "123", "repos"]
+        let complexComps = ["owners", "123", "repos"]
         let complexResult = complexMatcher.match(complexComps)
-        #expect(complexResult == "123", "Should capture userId parameter")
+        #expect(complexResult == "123", "Should capture ownerId parameter")
     }
 
     @Test("Real world example - GitHub style paths")
     func gitHubStylePaths() {
-        // users/:owner (GitHub user profile)
-        let userComps = ["users", "swiftlang"]
-        let userMatcher: PathMatcher<String> = PathMatcher {
-            Literal("users")
+        // owners/:owner (GitHub owner profile)
+        let ownerComps = ["owners", "swiftlang"]
+        let ownerMatcher: PathMatcher<String> = PathMatcher {
+            Literal("owners")
             Parameter() // owner
         }
-        let userResult = userMatcher.match(userComps)
-        #expect(userResult == "swiftlang", "Should capture 'swiftlang' as owner")
+        let ownerResult = ownerMatcher.match(ownerComps)
+        #expect(ownerResult == "swiftlang", "Should capture 'swiftlang' as owner")
 
-        // users/:owner/:repo (GitHub repository)
-        let repoComps = ["users", "swiftlang", "swift"]
+        // owners/:owner/:repo (GitHub repository)
+        let repoComps = ["owners", "swiftlang", "swift"]
         let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("users")
+            Literal("owners")
             Parameter() // owner
             OptionalParameter() // repo
         }
@@ -207,9 +207,9 @@ struct PathMatcherTests {
         #expect(repoResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
         #expect(repoResult?.1 == "swift", "Should capture 'swift' as repo")
 
-        // users/:owner without repo
-        let userOnlyResult = repoMatcher.match(userComps)
-        #expect(userOnlyResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
-        #expect(userOnlyResult?.1 == nil, "Repo should be nil when not provided")
+        // owners/:owner without repo
+        let ownerOnlyResult = repoMatcher.match(ownerComps)
+        #expect(ownerOnlyResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
+        #expect(ownerOnlyResult?.1 == nil, "Repo should be nil when not provided")
     }
 }
