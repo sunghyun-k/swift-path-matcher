@@ -75,14 +75,16 @@ let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
 }
 
 // With optional parameter
-let withRepo = repoMatcher.match(["owners", "swiftlang", "swift"])
-print(withRepo?.0) // "swiftlang"
-print(withRepo?.1) // Optional("swift")
+if let (owner, repo) = repoMatcher.match(["owners", "swiftlang", "swift"]) {
+    print(owner) // "swiftlang"
+    print(repo) // Optional("swift")
+}
 
 // Without optional parameter
-let withoutRepo = repoMatcher.match(["owners", "swiftlang"])
-print(withoutRepo?.0) // "swiftlang"
-print(withoutRepo?.1) // nil
+if let (owner, repo) = repoMatcher.match(["owners", "swiftlang"]) {
+    print(owner) // "swiftlang"
+    print(repo) // nil
+}
 ```
 
 > **⚠️ Important:** Optional parameters must always be placed at the end of the pattern.
