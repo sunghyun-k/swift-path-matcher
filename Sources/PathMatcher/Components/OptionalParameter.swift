@@ -53,8 +53,8 @@ public struct OptionalParameter: PathComponent {
     public init() {}
 
     /// The matcher implementation for this optional parameter component.
-    public var matcher: PathMatcherCore<String?> {
-        PathMatcherCore { components, index in
+    public var matcher: PathPattern<String?> {
+        PathPattern { components, index in
             if index < components.endIndex {
                 let value = components[index]
                 index += 1

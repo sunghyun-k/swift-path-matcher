@@ -49,8 +49,8 @@ public struct Literal: PathComponent {
     }
 
     /// The matcher implementation for this literal component.
-    public var matcher: PathMatcherCore<Void> {
-        PathMatcherCore { components, index in
+    public var matcher: PathPattern<Void> {
+        PathPattern { components, index in
             guard index < components.endIndex, components[index] == value else {
                 return nil
             }

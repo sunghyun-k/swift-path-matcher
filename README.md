@@ -115,8 +115,8 @@ You can create custom components by conforming to the `PathComponent` protocol:
 public struct CustomComponent: PathComponent {
     public typealias Output = YourType
     
-    public var matcher: PathMatcherCore<YourType> {
-        PathMatcherCore { components, index in
+    public var matcher: PathPattern<YourType> {
+        PathPattern { components, index in
             // Your matching logic here
         }
     }
@@ -142,7 +142,7 @@ public struct PathMatcher<Output> {
 ```swift
 public protocol PathComponent<Output> {
     associatedtype Output
-    var matcher: PathMatcherCore<Output> { get }
+    var matcher: PathPattern<Output> { get }
 }
 ```
 

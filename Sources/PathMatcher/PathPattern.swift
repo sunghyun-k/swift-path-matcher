@@ -1,18 +1,19 @@
 import Foundation
 
-// MARK: - PathMatcherCore (Public but implementation detail)
+// MARK: - PathPattern (Public but implementation detail)
 
-/// The core matching engine that implements the actual pattern matching logic.
+/// A reusable pattern that can match path segments and extract values.
 ///
-/// This type is public to support the DSL syntax but is considered an implementation detail.
+/// This type represents a composable path matching pattern with a specific output type.
+/// It is public to support the DSL syntax but is considered an implementation detail.
 /// Most users should interact with ``PathMatcher`` and ``PathComponent`` types instead.
 ///
 /// - Note: This type is part of the public API to support the result builder syntax,
 ///   but direct usage is not recommended for typical use cases.
-public struct PathMatcherCore<Output> {
+public struct PathPattern<Output> {
     let matchFunction: ([String], inout Int) -> Output?
 
-    /// Creates a new core matcher with the specified matching function.
+    /// Creates a new path pattern with the specified matching function.
     ///
     /// - Parameter matchFunction: A closure that takes an array of path components
     ///   and an index, and returns the matched value or `nil` if no match.
@@ -34,9 +35,9 @@ public struct PathMatcherCore<Output> {
     }
 }
 
-// MARK: - PathMatcherCore as PathComponent
+// MARK: - PathPattern as PathComponent
 
-extension PathMatcherCore: PathComponent {
-    /// Conforms to ``PathComponent`` by returning itself as the matcher.
-    public var matcher: PathMatcherCore<Output> { self }
+extension PathPattern: PathComponent {
+    /// Conforms to ``PathComponent`` by returning itself as the pattern.
+    public var matcher: PathPattern<Output> { self }
 }

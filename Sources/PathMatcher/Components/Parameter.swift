@@ -44,8 +44,8 @@ public struct Parameter: PathComponent {
     public init() {}
 
     /// The matcher implementation for this parameter component.
-    public var matcher: PathMatcherCore<String> {
-        PathMatcherCore { components, index in
+    public var matcher: PathPattern<String> {
+        PathPattern { components, index in
             guard index < components.endIndex else {
                 return nil
             }

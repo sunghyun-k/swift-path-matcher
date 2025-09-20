@@ -33,7 +33,7 @@ import Foundation
 /// }
 /// ```
 public struct PathMatcher<Output> {
-    private let matcher: PathMatcherCore<Output>
+    private let pattern: PathPattern<Output>
 
     /// Creates a new path matcher with the specified component configuration.
     ///
@@ -52,7 +52,7 @@ public struct PathMatcher<Output> {
     public init<Component: PathComponent>(@PathMatcherBuilder _ content: () -> Component)
         where Component.Output == Output
     {
-        matcher = content().matcher
+        pattern = content().matcher
     }
 
     /// Attempts to match the given path components against this matcher's pattern.
@@ -82,7 +82,7 @@ public struct PathMatcher<Output> {
     ///   Extra or missing components will result in a failed match.
     public func match(_ components: [String]) -> Output? {
         var index = components.startIndex
-        return matcher.match(components, &index).flatMap { result in
+        return pattern.match(components, &index).flatMap { result in
             // 전체 컴포넌트를 매칭했는지 확인
             index == components.endIndex ? result : nil
         }

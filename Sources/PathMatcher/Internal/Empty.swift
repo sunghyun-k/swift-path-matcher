@@ -32,7 +32,7 @@ public struct Empty: PathComponent {
     /// The matcher implementation for this empty component.
     ///
     /// Always returns `()` (void) without consuming any path components.
-    public var matcher: PathMatcherCore<Void> {
-        PathMatcherCore { _, _ in () }
+    public var matcher: PathPattern<Void> {
+        PathPattern { _, _ in () }
     }
 }

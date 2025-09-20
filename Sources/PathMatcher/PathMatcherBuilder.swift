@@ -31,10 +31,10 @@ public enum PathMatcherBuilder {
     /// Builds a path matcher from a single component.
     ///
     /// - Parameter component: The single path component to use.
-    /// - Returns: A ``PathMatcherCore`` that implements the component's matching logic.
+    /// - Returns: A ``PathPattern`` that implements the component's matching logic.
     public static func buildPartialBlock<Component: PathComponent>(
         first component: Component,
-    ) -> PathMatcherCore<Component.Output> {
+    ) -> PathPattern<Component.Output> {
         component.matcher
     }
 
