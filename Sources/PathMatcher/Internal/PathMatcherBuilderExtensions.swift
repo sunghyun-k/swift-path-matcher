@@ -2,6 +2,11 @@ import Foundation
 
 // MARK: - Builder Extensions
 
+/// Extensions to the PathMatcherBuilder to handle various combinations of components.
+///
+/// These extensions provide the necessary overloads to properly combine different types
+/// of path components while maintaining type safety and proper tuple flattening.
+/// They are implementation details of the result builder system.
 extension PathMatcherBuilder {
     // Void + Void -> Void
     public static func buildPartialBlock(

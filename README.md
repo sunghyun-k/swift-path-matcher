@@ -111,7 +111,7 @@ pathHandler.add {
     push(UserViewController(userID: userID))
 }
 
-// Complex nested routes
+// Complex nested routes with multiple parameters
 pathHandler.add {
     Literal("users")
     Parameter()
@@ -120,6 +120,18 @@ pathHandler.add {
 } handler: { userID, bookmarkID in
     push(UserViewController(userID: userID))
     push(BookmarkViewController(bookmarkID: bookmarkID))
+}
+
+// Routes with optional parameters
+pathHandler.add {
+    Literal("search")
+    OptionalParameter()
+} handler: { query in
+    if let query = query {
+        present(SearchViewController(query: query))
+    } else {
+        present(SearchViewController())
+    }
 }
 
 // Handle incoming path
@@ -141,13 +153,45 @@ pathHandler.handle(["users", "123", "bookmarks", "456"])
 Extend functionality by creating custom components that conform to `PathComponent`:
 
 ```swift
-public struct CustomComponent: PathComponent {
-    public typealias Output = YourCustomType
+public struct UUIDParameter: PathComponent {
+    public typealias Output = UUID
     
-    public var matcher: PathPattern<YourCustomType> {
+    public var matcher: PathPattern<UUID> {
         PathPattern { components, index in
-            // Implement your custom matching logic
-            // Return (matched_value, consumed_components_count) or nil
+            guard index < components.endIndex,
+                  let uuid = UUID(uuidString: components[index]) else {
+                return nil
+            }
+            index += 1
+            return uuid
+        }
+    }
+}
+
+// Usage example
+let userMatcher: PathMatcher<UUID> = PathMatcher {
+    Literal("users")
+    UUIDParameter() // Only matches valid UUID strings
+}
+
+let result = userMatcher.match(["users", "550e8400-e29b-41d4-a716-446655440000"])
+// Returns: UUID("550e8400-e29b-41d4-a716-446655440000")
+```
+
+Custom components can implement any validation or transformation logic:
+
+```swift
+public struct IntParameter: PathComponent {
+    public typealias Output = Int
+    
+    public var matcher: PathPattern<Int> {
+        PathPattern { components, index in
+            guard index < components.endIndex,
+                  let intValue = Int(components[index]) else {
+                return nil
+            }
+            index += 1
+            return intValue
         }
     }
 }

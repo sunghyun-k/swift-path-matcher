@@ -2,6 +2,11 @@ import Foundation
 
 // MARK: - PathMatcherFactory (Internal)
 
+/// Internal factory for combining path patterns with proper type handling.
+///
+/// This enum provides static methods for concatenating path patterns while handling
+/// various type combinations, including void elimination and tuple flattening.
+/// These methods are used by the result builder system to combine components.
 enum PathMatcherFactory {
     static func concatenate<Output1, Output2>(
         _ first: PathPattern<Output1>, _ second: PathPattern<Output2>,
