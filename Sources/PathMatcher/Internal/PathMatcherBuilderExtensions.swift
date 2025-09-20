@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Builder Extensions (Internal)
+// MARK: - Builder Extensions
 
 extension PathMatcherBuilder {
     // Void + Void -> Void
