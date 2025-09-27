@@ -47,6 +47,24 @@ let result: Void? = profileSettingsMatcher.match(pathComponents)
 print(result != nil) // true
 ```
 
+### Case-Insensitive Matching
+
+Use the `caseInsensitive` parameter for flexible text matching:
+
+```swift
+// Case-insensitive matcher
+let apiMatcher: PathMatcher<Void> = PathMatcher {
+    Literal("api", caseInsensitive: true)
+    Literal("v1", caseInsensitive: true)
+}
+
+// All of these will match:
+apiMatcher.match(["api", "v1"])     // ✓
+apiMatcher.match(["API", "V1"])     // ✓
+apiMatcher.match(["Api", "v1"])     // ✓
+apiMatcher.match(["api", "V1"])     // ✓
+```
+
 ### Parameter Capture
 
 Capture dynamic path segments as strongly-typed parameters. The output type is automatically inferred at compile time based on the order and count of `Parameter` and `OptionalParameter` components used in the PathMatcherBuilder:
@@ -147,6 +165,7 @@ pathHandler.handle(["users", "123", "bookmarks", "456"])
 | Component | Description | Output Type |
 |-----------|-------------|-------------|
 | `Literal("text")` | Matches exact text | `Void` |
+| `Literal("text", caseInsensitive: true)` | Matches text ignoring case | `Void` |
 | `Parameter()` | Captures a required path segment | `String` |
 | `OptionalParameter()` | Captures an optional path segment | `String?` |
 
@@ -158,7 +177,7 @@ Extend functionality by creating custom components that conform to `PathComponen
 public struct UUIDParameter: PathComponent {
     public typealias Output = UUID
     
-    public var matcher: PathPattern<UUID> {
+    public var pattern: PathPattern<UUID> {
         PathPattern { components, index in
             guard index < components.endIndex,
                   let uuid = UUID(uuidString: components[index]) else {
@@ -186,7 +205,7 @@ Custom components can implement any validation or transformation logic:
 public struct IntParameter: PathComponent {
     public typealias Output = Int
     
-    public var matcher: PathPattern<Int> {
+    public var pattern: PathPattern<Int> {
         PathPattern { components, index in
             guard index < components.endIndex,
                   let intValue = Int(components[index]) else {

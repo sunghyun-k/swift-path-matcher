@@ -39,5 +39,5 @@ public struct PathPattern<Output> {
 
 extension PathPattern: PathComponent {
     /// Conforms to ``PathComponent`` by returning itself as the pattern.
-    public var matcher: PathPattern<Output> { self }
+    public var pattern: PathPattern<Output> { self }
 }

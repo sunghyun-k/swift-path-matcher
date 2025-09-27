@@ -29,10 +29,10 @@ public struct Empty: PathComponent {
     /// The empty component always succeeds in matching and consumes no path components.
     public init() {}
 
-    /// The matcher implementation for this empty component.
+    /// The pattern implementation for this empty component.
     ///
     /// Always returns `()` (void) without consuming any path components.
-    public var matcher: PathPattern<Void> {
+    public var pattern: PathPattern<Void> {
         PathPattern { _, _ in () }
     }
 }

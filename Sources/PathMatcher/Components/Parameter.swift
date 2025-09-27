@@ -43,8 +43,8 @@ public struct Parameter: PathComponent {
     /// position in the path components array.
     public init() {}
 
-    /// The matcher implementation for this parameter component.
-    public var matcher: PathPattern<String> {
+    /// The pattern implementation for this parameter component.
+    public var pattern: PathPattern<String> {
         PathPattern { components, index in
             guard index < components.endIndex else {
                 return nil

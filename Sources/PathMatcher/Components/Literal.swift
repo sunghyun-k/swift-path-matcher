@@ -54,8 +54,8 @@ public struct Literal: PathComponent {
         self.caseInsensitive = caseInsensitive
     }
 
-    /// The matcher implementation for this literal component.
-    public var matcher: PathPattern<Void> {
+    /// The pattern implementation for this literal component.
+    public var pattern: PathPattern<Void> {
         PathPattern { components, index in
             guard index < components.endIndex else {
                 return nil

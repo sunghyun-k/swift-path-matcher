@@ -21,7 +21,7 @@ import Foundation
 /// struct CustomComponent: PathComponent {
 ///     typealias Output = String
 ///
-///     var matcher: PathPattern<String> {
+///     var pattern: PathPattern<String> {
 ///         PathPattern { components, index in
 ///             // Your custom matching logic
 ///         }
@@ -33,5 +33,5 @@ public protocol PathComponent<Output> {
     associatedtype Output
 
     /// The pattern that implements the matching logic for this component.
-    var matcher: PathPattern<Output> { get }
+    var pattern: PathPattern<Output> { get }
 }

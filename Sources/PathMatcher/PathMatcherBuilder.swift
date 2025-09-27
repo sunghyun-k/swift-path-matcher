@@ -35,7 +35,7 @@ public enum PathMatcherBuilder {
     public static func buildPartialBlock<Component: PathComponent>(
         first component: Component,
     ) -> PathPattern<Component.Output> {
-        component.matcher
+        component.pattern
     }
 
     /// Converts a path component into a form that can be used by the result builder.

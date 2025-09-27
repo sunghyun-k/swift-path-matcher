@@ -45,14 +45,14 @@ extension PathMatcherBuilder {
         accumulated: PathPattern<Void>,
         next: C,
     ) -> PathPattern<C.Output> where C.Output == Void {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<C: PathComponent>(
         accumulated: PathPattern<Void>,
         next: C,
     ) -> PathPattern<C.Output> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     @_disfavoredOverload
@@ -60,41 +60,41 @@ extension PathMatcherBuilder {
         accumulated: PathPattern<T>,
         next: C,
     ) -> PathPattern<(T, C.Output)> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<T, C: PathComponent>(
         accumulated: PathPattern<T>,
         next: C,
     ) -> PathPattern<T> where C.Output == Void {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<T1, T2, C: PathComponent>(
         accumulated: PathPattern<(T1, T2)>,
         next: C,
     ) -> PathPattern<(T1, T2, C.Output)> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<T1, T2, T3, C: PathComponent>(
         accumulated: PathPattern<(T1, T2, T3)>,
         next: C,
     ) -> PathPattern<(T1, T2, T3, C.Output)> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<T1, T2, T3, T4, C: PathComponent>(
         accumulated: PathPattern<(T1, T2, T3, T4)>,
         next: C,
     ) -> PathPattern<(T1, T2, T3, T4, C.Output)> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 
     public static func buildPartialBlock<T1, T2, T3, T4, T5, C: PathComponent>(
         accumulated: PathPattern<(T1, T2, T3, T4, T5)>,
         next: C,
     ) -> PathPattern<(T1, T2, T3, T4, T5, C.Output)> {
-        PathMatcherFactory.concatenate(accumulated, next.matcher)
+        PathMatcherFactory.concatenate(accumulated, next.pattern)
     }
 }

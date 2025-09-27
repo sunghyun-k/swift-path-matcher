@@ -52,7 +52,7 @@ public struct PathMatcher<Output> {
     public init<Component: PathComponent>(@PathMatcherBuilder _ content: () -> Component)
         where Component.Output == Output
     {
-        pattern = content().matcher
+        pattern = content().pattern
     }
 
     /// Attempts to match the given path components against this matcher's pattern.

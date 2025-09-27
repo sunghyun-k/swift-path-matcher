@@ -52,8 +52,8 @@ public struct OptionalParameter: PathComponent {
     /// corresponding position, or return `nil` if no more path components exist.
     public init() {}
 
-    /// The matcher implementation for this optional parameter component.
-    public var matcher: PathPattern<String?> {
+    /// The pattern implementation for this optional parameter component.
+    public var pattern: PathPattern<String?> {
         PathPattern { components, index in
             if index < components.endIndex {
                 let value = components[index]
