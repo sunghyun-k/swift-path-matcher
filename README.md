@@ -19,7 +19,7 @@ Add PathMatcher to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/sunghyun-k/swift-path-matcher.git", from: "0.1.0")
+    .package(url: "https://github.com/sunghyun-k/swift-path-matcher.git", from: "0.1.5")
 ]
 ```
 
