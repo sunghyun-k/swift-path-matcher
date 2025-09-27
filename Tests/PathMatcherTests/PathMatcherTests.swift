@@ -212,4 +212,74 @@ struct PathMatcherTests {
         #expect(ownerOnlyResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
         #expect(ownerOnlyResult?.1 == nil, "Repo should be nil when not provided")
     }
+
+    @Test("Case insensitive literal matching")
+    func caseInsensitiveLiteralMatching() {
+        // Case sensitive (default behavior)
+        let caseSensitiveMatcher: PathMatcher<Void> = PathMatcher {
+            Literal("search")
+        }
+        
+        // Should match exact case
+        let exactResult = caseSensitiveMatcher.match(["search"])
+        #expect(exactResult != nil, "Should match exact case")
+        
+        // Should not match different case
+        let upperResult = caseSensitiveMatcher.match(["Search"])
+        #expect(upperResult == nil, "Should not match different case by default")
+        
+        let lowerResult = caseSensitiveMatcher.match(["SEARCH"])
+        #expect(lowerResult == nil, "Should not match uppercase when expecting lowercase")
+        
+        // Case insensitive matcher
+        let caseInsensitiveMatcher: PathMatcher<Void> = PathMatcher {
+            Literal("search", caseInsensitive: true)
+        }
+        
+        // Should match exact case
+        let exactInsensitiveResult = caseInsensitiveMatcher.match(["search"])
+        #expect(exactInsensitiveResult != nil, "Should match exact case even when case insensitive")
+        
+        // Should match different cases
+        let upperInsensitiveResult = caseInsensitiveMatcher.match(["Search"])
+        #expect(upperInsensitiveResult != nil, "Should match capitalized version")
+        
+        let allUpperResult = caseInsensitiveMatcher.match(["SEARCH"])
+        #expect(allUpperResult != nil, "Should match uppercase version")
+        
+        let mixedCaseResult = caseInsensitiveMatcher.match(["SeArCh"])
+        #expect(mixedCaseResult != nil, "Should match mixed case version")
+        
+        // Should still not match different words
+        let wrongWordResult = caseInsensitiveMatcher.match(["profile"])
+        #expect(wrongWordResult == nil, "Should not match different words")
+    }
+
+    @Test("Complex case insensitive matching")
+    func complexCaseInsensitiveMatching() {
+        // Multiple literals with case insensitive
+        let apiMatcher: PathMatcher<String> = PathMatcher {
+            Literal("api", caseInsensitive: true)
+            Literal("v1", caseInsensitive: true)
+            Parameter() // resource
+        }
+        
+        // Test various case combinations
+        let testCases = [
+            ["api", "v1", "users"],
+            ["API", "V1", "users"],
+            ["Api", "v1", "users"],
+            ["api", "V1", "users"],
+            ["API", "v1", "users"]
+        ]
+        
+        for (index, testCase) in testCases.enumerated() {
+            let result = apiMatcher.match(testCase)
+            #expect(result == "users", "Test case \(index + 1) should match and capture 'users'")
+        }
+        
+        // Should not match wrong literals
+        let wrongResult = apiMatcher.match(["wrong", "v1", "users"])
+        #expect(wrongResult == nil, "Should not match wrong first literal")
+    }
 }

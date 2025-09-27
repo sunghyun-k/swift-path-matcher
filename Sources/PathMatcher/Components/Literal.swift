@@ -32,28 +32,43 @@ import Foundation
 public struct Literal: PathComponent {
     public typealias Output = Void
     private let value: String
+    private let caseInsensitive: Bool
 
     /// Creates a new literal component that matches the specified string.
     ///
     /// - Parameter value: The exact string that this component will match.
-    ///   The matching is case-sensitive.
+    /// - Parameter caseInsensitive: Whether to perform case-insensitive matching.
+    ///   Defaults to `false` (case-sensitive matching).
     ///
     /// ## Example
     ///
     /// ```swift
     /// let component = Literal("users")
     /// // Will match path component "users" exactly
+    ///
+    /// let caseInsensitiveComponent = Literal("users", caseInsensitive: true)
+    /// // Will match "users", "Users", "USERS", etc.
     /// ```
-    public init(_ value: String) {
+    public init(_ value: String, caseInsensitive: Bool = false) {
         self.value = value
+        self.caseInsensitive = caseInsensitive
     }
 
     /// The matcher implementation for this literal component.
     public var matcher: PathPattern<Void> {
         PathPattern { components, index in
-            guard index < components.endIndex, components[index] == value else {
+            guard index < components.endIndex else {
                 return nil
             }
+            
+            let matches = caseInsensitive ? 
+                components[index].lowercased() == value.lowercased() :
+                components[index] == value
+            
+            guard matches else {
+                return nil
+            }
+            
             index += 1
             return ()
         }
