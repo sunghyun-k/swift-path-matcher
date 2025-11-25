@@ -47,6 +47,37 @@ let result: Void? = profileSettingsMatcher.match(pathComponents)
 print(result != nil) // true
 ```
 
+### Multi-Segment Literals
+
+`Literal` can match multiple path components at once when the value contains `/`:
+
+```swift
+// These two matchers are equivalent:
+let matcher1: PathMatcher<Void> = PathMatcher {
+    Literal("api")
+    Literal("v2")
+    Literal("books")
+}
+
+let matcher2: PathMatcher<Void> = PathMatcher {
+    Literal("api/v2/books")
+}
+
+// Both match: ["api", "v2", "books"]
+```
+
+This makes it easier to define common path prefixes:
+
+```swift
+let bookMatcher: PathMatcher<String> = PathMatcher {
+    Literal("api/v2/books")
+    Parameter() // book ID
+}
+
+let result = bookMatcher.match(["api", "v2", "books", "123"])
+print(result) // Optional("123")
+```
+
 ### Case-Insensitive Matching
 
 Use the `caseInsensitive` parameter for flexible text matching:
@@ -63,6 +94,17 @@ apiMatcher.match(["api", "v1"])     // ✓
 apiMatcher.match(["API", "V1"])     // ✓
 apiMatcher.match(["Api", "v1"])     // ✓
 apiMatcher.match(["api", "V1"])     // ✓
+```
+
+Case-insensitive matching also works with multi-segment literals:
+
+```swift
+let matcher: PathMatcher<Void> = PathMatcher {
+    Literal("API/V2/Books", caseInsensitive: true)
+}
+
+matcher.match(["api", "v2", "books"]) // ✓
+matcher.match(["API", "V2", "BOOKS"]) // ✓
 ```
 
 ### Parameter Capture
@@ -167,6 +209,7 @@ router.handle(url)
 | Component | Description | Output Type |
 |-----------|-------------|-------------|
 | `Literal("text")` | Matches exact text | `Void` |
+| `Literal("a/b/c")` | Matches multiple path segments | `Void` |
 | `Literal("text", caseInsensitive: true)` | Matches text ignoring case | `Void` |
 | `Parameter()` | Captures a required path segment | `String` |
 | `OptionalParameter()` | Captures an optional path segment | `String?` |
