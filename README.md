@@ -1,21 +1,21 @@
 # PathMatcher
 
-A Swift library for pattern matching URL path components using a declarative DSL with result builders.
+**Declarative URL path matching library using Swift Result Builders**
 
-> **⚠️ Note:** This library is currently under development.
+```swift
+let matcher: PathMatcher<(String, String?)> = PathMatcher {
+    Literal("users")
+    Parameter()           // required: user ID
+    OptionalParameter()   // optional: additional path
+}
 
-## Features
-
-- **Declarative DSL**: Build path matchers using a clean, readable syntax with Swift result builders
-- **Type-safe**: Capture path parameters with full type safety and compile-time guarantees
-- **Optional Parameters**: Support for optional path segments with automatic handling
-- **Deep Link Support**: Built-in `PathRouter` for easy deep link routing
+matcher.match(["users", "john", "profile"]) // ("john", "profile")
+matcher.match(["users", "john"])            // ("john", nil)
+```
 
 ## Installation
 
 ### Swift Package Manager
-
-Add PathMatcher to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -23,288 +23,179 @@ dependencies: [
 ]
 ```
 
-Or add it through Xcode: **File → Add Package Dependencies** → Enter repository URL
+## Core Components
 
-## Quick Start
+| Component | Description | Output Type |
+|-----------|-------------|-------------|
+| `Literal("path")` | Matches exact string | `Void` |
+| `Parameter()` | Captures required path segment | `String` |
+| `OptionalParameter()` | Captures optional segment | `String?` |
 
-### Basic Usage
+## Usage
+
+### Basic Matching
 
 ```swift
 import PathMatcher
 
-// Extract path components from URL
-let url = URL(string: "https://github.com/settings/profile")!
-let pathComponents = Array(url.pathComponents.dropFirst()) // ["settings", "profile"]
-
-// Create a simple matcher
-let profileSettingsMatcher: PathMatcher<Void> = PathMatcher {
-    Literal("settings")
-    Literal("profile")
+let searchMatcher: PathMatcher<Void> = PathMatcher {
+    Literal("search")
 }
 
-// Match returns non-nil if successful
-let result: Void? = profileSettingsMatcher.match(pathComponents)
-print(result != nil) // true
+searchMatcher.match(["search"])  // () - success
+searchMatcher.match(["profile"]) // nil - failure
 ```
 
 ### Multi-Segment Literals
 
-`Literal` can match multiple path components at once when the value contains `/`:
+`Literal` can match multiple segments separated by `/`:
 
 ```swift
-// These two matchers are equivalent:
-let matcher1: PathMatcher<Void> = PathMatcher {
-    Literal("api")
-    Literal("v2")
-    Literal("books")
-}
+// Both matchers work identically
+let matcher1 = PathMatcher { Literal("api"); Literal("v2"); Literal("books") }
+let matcher2 = PathMatcher { Literal("api/v2/books") }
 
-let matcher2: PathMatcher<Void> = PathMatcher {
-    Literal("api/v2/books")
-}
-
-// Both match: ["api", "v2", "books"]
-```
-
-This makes it easier to define common path prefixes:
-
-```swift
-let bookMatcher: PathMatcher<String> = PathMatcher {
-    Literal("api/v2/books")
-    Parameter() // book ID
-}
-
-let result = bookMatcher.match(["api", "v2", "books", "123"])
-print(result) // Optional("123")
+// Both match ["api", "v2", "books"]
 ```
 
 ### Case-Insensitive Matching
 
-Use the `caseInsensitive` parameter for flexible text matching:
-
 ```swift
-// Case-insensitive matcher
-let apiMatcher: PathMatcher<Void> = PathMatcher {
-    Literal("api", caseInsensitive: true)
-    Literal("v1", caseInsensitive: true)
+let matcher = PathMatcher {
+    Literal("API/V2", caseInsensitive: true)
 }
 
-// All of these will match:
-apiMatcher.match(["api", "v1"])     // ✓
-apiMatcher.match(["API", "V1"])     // ✓
-apiMatcher.match(["Api", "v1"])     // ✓
-apiMatcher.match(["api", "V1"])     // ✓
-```
-
-Case-insensitive matching also works with multi-segment literals:
-
-```swift
-let matcher: PathMatcher<Void> = PathMatcher {
-    Literal("API/V2/Books", caseInsensitive: true)
-}
-
-matcher.match(["api", "v2", "books"]) // ✓
-matcher.match(["API", "V2", "BOOKS"]) // ✓
+matcher.match(["api", "v2"])   // success
+matcher.match(["API", "V2"])   // success
+matcher.match(["Api", "v2"])   // success
 ```
 
 ### Parameter Capture
 
-Capture dynamic path segments as strongly-typed parameters. The output type is automatically inferred at compile time based on the order and count of `Parameter` and `OptionalParameter` components used in the PathMatcherBuilder:
-
 ```swift
-// Match pattern: "owners/:owner"
+// Pattern: "owners/:owner"
 let ownerMatcher: PathMatcher<String> = PathMatcher {
     Literal("owners")
-    Parameter() // captures the owner name
+    Parameter()
 }
 
-let result: String? = ownerMatcher.match(["owners", "swiftlang"])
-print(result) // Optional("swiftlang")
+ownerMatcher.match(["owners", "swiftlang"]) // "swiftlang"
+```
+
+### Multiple Parameters
+
+Multiple parameters are automatically flattened into tuples:
+
+```swift
+// Pattern: "users/:userId/posts/:postId"
+let postMatcher: PathMatcher<(String, String)> = PathMatcher {
+    Literal("users")
+    Parameter()      // userId
+    Literal("posts")
+    Parameter()      // postId
+}
+
+let result = postMatcher.match(["users", "john", "posts", "123"])
+// result?.0 == "john", result?.1 == "123"
 ```
 
 ### Optional Parameters
 
-Handle optional path segments with automatic type inference:
-
 ```swift
-// Match pattern: "owners/:owner/:repo?"
+// Pattern: "owners/:owner/:repo?"
 let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
     Literal("owners")
-    Parameter() // required: owner
-    OptionalParameter() // optional: repo
+    Parameter()         // required
+    OptionalParameter() // optional
 }
 
-// With optional parameter
-if let (owner, repo) = repoMatcher.match(["owners", "swiftlang", "swift"]) {
-    print(owner) // "swiftlang"
-    print(repo) // Optional("swift")
-}
-
-// Without optional parameter
-if let (owner, repo) = repoMatcher.match(["owners", "swiftlang"]) {
-    print(owner) // "swiftlang"
-    print(repo) // nil
-}
+repoMatcher.match(["owners", "swift", "nio"]) // ("swift", "nio")
+repoMatcher.match(["owners", "swift"])        // ("swift", nil)
 ```
 
-> **⚠️ Important:** Optional parameters must always be placed at the end of the pattern.
+## PathRouter
 
-## Deep Link Handling with PathRouter
-
-`PathRouter` provides a convenient way to handle deep links and URL routing:
+Register multiple path patterns and route URLs:
 
 ```swift
-import PathRouter
-
 var router = PathRouter()
 
-// Simple routes
 router.append {
     Literal("settings")
-} handler: { url in
-    present(SettingsViewController())
+} handler: { url, _ in
+    showSettings()
 }
 
-// Routes with parameters
 router.append {
     Literal("users")
     Parameter()
 } handler: { url, userID in
-    push(UserViewController(userID: userID))
+    showUser(id: userID)
 }
 
-// Complex nested routes with multiple parameters
 router.append {
-    Literal("users")
-    Parameter()
-    Literal("bookmarks")
-    Parameter()
-} handler: { url, params in
-    let (userID, bookmarkID) = params
-    push(UserViewController(userID: userID))
-    push(BookmarkViewController(bookmarkID: bookmarkID))
-}
-
-// Routes with optional parameters
-router.append {
-    Literal("search")
-    OptionalParameter()
-} handler: { url, query in
-    if let query = query {
-        present(SearchViewController(query: query))
-    } else {
-        present(SearchViewController())
-    }
-}
-
-// Handle incoming URL
-let url = URL(string: "https://example.com/users/123/bookmarks/456")!
-router.handle(url)
-```
-
-## Available Components
-
-### Built-in Components
-
-| Component | Description | Output Type |
-|-----------|-------------|-------------|
-| `Literal("text")` | Matches exact text | `Void` |
-| `Literal("a/b/c")` | Matches multiple path segments | `Void` |
-| `Literal("text", caseInsensitive: true)` | Matches text ignoring case | `Void` |
-| `Parameter()` | Captures a required path segment | `String` |
-| `OptionalParameter()` | Captures an optional path segment | `String?` |
-
-### Creating Custom Components
-
-Extend functionality by creating custom components that conform to `PathComponent`:
-
-```swift
-public struct UUIDParameter: PathComponent {
-    public typealias Output = UUID
-    
-    public var pattern: PathPattern<UUID> {
-        PathPattern { components, index in
-            guard index < components.endIndex,
-                  let uuid = UUID(uuidString: components[index]) else {
-                return nil
-            }
-            index += 1
-            return uuid
-        }
-    }
-}
-
-// Usage example
-let userMatcher: PathMatcher<UUID> = PathMatcher {
-    Literal("users")
-    UUIDParameter() // Only matches valid UUID strings
-}
-
-let result = userMatcher.match(["users", "550e8400-e29b-41d4-a716-446655440000"])
-// Returns: UUID("550e8400-e29b-41d4-a716-446655440000")
-```
-
-Custom components can implement any validation or transformation logic:
-
-```swift
-public struct IntParameter: PathComponent {
-    public typealias Output = Int
-    
-    public var pattern: PathPattern<Int> {
-        PathPattern { components, index in
-            guard index < components.endIndex,
-                  let intValue = Int(components[index]) else {
-                return nil
-            }
-            index += 1
-            return intValue
-        }
-    }
-}
-```
-
-## Advanced Usage
-
-### Complex Pattern Matching
-
-```swift
-// Match pattern: "api/v1/users/:id/posts/:postId?"
-let apiMatcher: PathMatcher<(String, String?)> = PathMatcher {
-    Literal("api")
-    Literal("v1")
-    Literal("users")
-    Parameter() // user ID
     Literal("posts")
-    OptionalParameter() // optional post ID
+    Parameter()
+    OptionalParameter()
+} handler: { url, params in
+    let (postID, action) = params
+    showPost(id: postID, action: action)
 }
+
+// Handle URL - executes first matching handler
+router.handle(URL(string: "myapp:///users/john")!)
 ```
 
-### Type Safety
+## Custom Components
 
-PathMatcher leverages Swift's type system to ensure compile-time safety:
+Create your own components by implementing the `PathComponent` protocol:
 
 ```swift
-// Compiler knows the exact return type
-let userMatcher: PathMatcher<String> = PathMatcher {
-    Literal("users")
-    Parameter()
+struct IntParameter: PathComponent {
+    typealias Output = Int
+
+    var pattern: PathPattern<Int> {
+        PathPattern { components, index in
+            guard index < components.endIndex,
+                  let value = Int(components[index]) else {
+                return nil
+            }
+            index += 1
+            return value
+        }
+    }
 }
 
-// Type-safe parameter handling
-if let userID = userMatcher.match(pathComponents) {
-    // userID is guaranteed to be String
-    loadUser(userID)
+// Usage
+let matcher: PathMatcher<Int> = PathMatcher {
+    Literal("posts")
+    IntParameter()  // matches integers only
 }
+
+matcher.match(["posts", "123"])   // 123
+matcher.match(["posts", "abc"])   // nil
 ```
+
+## Type System
+
+The Result Builder automatically handles type composition:
+
+- `Void + Void → Void`
+- `Void + T → T`
+- `T + Void → T`
+- `T1 + T2 → (T1, T2)`
+- `(T1, T2) + T3 → (T1, T2, T3)` (flattened up to 6 elements)
+
+## Example App
+
+A deep link routing demo using SwiftUI and NavigationStack is included.
+
+Run Xcode Preview in `Sources/Example/ContentView.swift` to try it out.
 
 ## Requirements
 
-- **Swift**: 6.1 or later
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- Swift 6.1+
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+MIT License
