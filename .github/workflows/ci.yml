@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-macos:
+    name: Test (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.1"
+
+      - name: Build
+        run: swift build
+
+      - name: Run Tests
+        run: swift test
+
+  test-linux:
+    name: Test (Linux)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: swift build
+
+      - name: Run Tests
+        run: swift test
+
+  code-coverage:
+    name: Code Coverage
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.1"
+
+      - name: Generate Coverage Report
+        run: swift test --enable-code-coverage
+
+      - name: Export Coverage
+        run: |
+          xcrun llvm-cov export \
+            .build/debug/swift-path-matcherPackageTests.xctest/Contents/MacOS/swift-path-matcherPackageTests \
+            -instr-profile .build/debug/codecov/default.profdata \
+            -format lcov \
+            -ignore-filename-regex '\.build|Tests' \
+            > coverage.lcov
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage.lcov
+          fail_ci_if_error: false
