@@ -6,12 +6,16 @@ let package = Package(
     products: [
         .library(
             name: "PathMatcher",
-            targets: ["PathMatcher"],
+            targets: ["PathMatcher", "PathRouter"],
         ),
     ],
     targets: [
         .target(
             name: "PathMatcher",
+        ),
+        .target(
+            name: "PathRouter",
+            dependencies: ["PathMatcher"],
         ),
         .testTarget(
             name: "PathMatcherTests",
