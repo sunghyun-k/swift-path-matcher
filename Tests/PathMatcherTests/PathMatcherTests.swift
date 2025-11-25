@@ -92,6 +92,66 @@ struct PathMatcherTests {
 
             #expect(matcher.match(["wrong", "v1", "users"]) == nil)
         }
+
+        @Test("Multi-segment literal matching")
+        func multiSegmentLiteral() {
+            let matcher = PathMatcher {
+                Literal("api/v2/books")
+            }
+
+            #expect(matcher.match(["api", "v2", "books"]) != nil)
+            #expect(matcher.match(["api", "v2"]) == nil)
+            #expect(matcher.match(["api", "v2", "books", "extra"]) == nil)
+            #expect(matcher.match(["api", "v1", "books"]) == nil)
+        }
+
+        @Test("Multi-segment literal with parameter")
+        func multiSegmentLiteralWithParameter() {
+            let matcher = PathMatcher {
+                Literal("api/v2/books")
+                Parameter()
+            }
+
+            let result = matcher.match(["api", "v2", "books", "123"])
+            #expect(result == "123")
+            #expect(matcher.match(["api", "v2", "books"]) == nil)
+        }
+
+        @Test("Multi-segment literal case insensitive")
+        func multiSegmentLiteralCaseInsensitive() {
+            let matcher = PathMatcher {
+                Literal("API/V2/Books", caseInsensitive: true)
+            }
+
+            #expect(matcher.match(["api", "v2", "books"]) != nil)
+            #expect(matcher.match(["API", "V2", "BOOKS"]) != nil)
+            #expect(matcher.match(["Api", "V2", "Books"]) != nil)
+        }
+
+        @Test("Multi-segment literal with leading/trailing slashes")
+        func multiSegmentLiteralEdgeCases() {
+            let matcher1 = PathMatcher {
+                Literal("/api/v2/")
+            }
+            #expect(matcher1.match(["api", "v2"]) != nil)
+
+            let matcher2 = PathMatcher {
+                Literal("///api///v2///")
+            }
+            #expect(matcher2.match(["api", "v2"]) != nil)
+        }
+
+        @Test("Mixed single and multi-segment literals")
+        func mixedLiterals() {
+            let matcher = PathMatcher {
+                Literal("api/v2")
+                Literal("users")
+                Parameter()
+            }
+
+            let result = matcher.match(["api", "v2", "users", "john"])
+            #expect(result == "john")
+        }
     }
 
     // MARK: - Parameter Matching
