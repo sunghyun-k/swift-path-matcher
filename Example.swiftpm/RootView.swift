@@ -1,6 +1,5 @@
 import SwiftUI
 
-@available(iOS 16.0, macOS 13.0, *)
 struct RootView: View {
     @State private var urlText = "https://example.com/users/123"
     @Environment(\.openURL) private var openURL
@@ -24,10 +23,8 @@ struct RootView: View {
                     .font(.headline)
                 TextField("URL", text: $urlText)
                     .textFieldStyle(.roundedBorder)
-                #if os(iOS)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                #endif
 
                 VStack(spacing: 8) {
                     ForEach(sampleURLs, id: \.self) { sample in

@@ -213,7 +213,7 @@ The Result Builder automatically handles type composition:
 
 A deep link routing demo using SwiftUI and NavigationStack is included.
 
-Run Xcode Preview in `Sources/Example/ContentView.swift` to try it out.
+Open `Example.swiftpm` in Xcode to run the Swift Playground app.
 
 ## Requirements
 

@@ -1,6 +1,5 @@
 import SwiftUI
 
-@available(iOS 16.0, macOS 13.0, *)
 struct PostView: View {
     struct Destination: Hashable {
         let userID: String
