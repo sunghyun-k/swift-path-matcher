@@ -9,7 +9,7 @@ A Swift library for pattern matching URL path components using a declarative DSL
 - **Declarative DSL**: Build path matchers using a clean, readable syntax with Swift result builders
 - **Type-safe**: Capture path parameters with full type safety and compile-time guarantees
 - **Optional Parameters**: Support for optional path segments with automatic handling
-- **Deep Link Support**: Built-in `PathHandler` for easy deep link routing
+- **Deep Link Support**: Built-in `PathRouter` for easy deep link routing
 
 ## Installation
 
@@ -107,46 +107,47 @@ if let (owner, repo) = repoMatcher.match(["owners", "swiftlang"]) {
 
 > **⚠️ Important:** Optional parameters must always be placed at the end of the pattern.
 
-## Deep Link Handling with PathHandler
+## Deep Link Handling with PathRouter
 
-`PathHandler` provides a convenient way to handle deep links and URL routing:
+`PathRouter` provides a convenient way to handle deep links and URL routing:
 
 ```swift
-import PathMatcher
+import PathRouter
 
-var pathHandler = PathHandler()
+var router = PathRouter()
 
 // Simple routes
-pathHandler.add {
+router.append {
     Literal("settings")
-} handler: {
+} handler: { url in
     present(SettingsViewController())
 }
 
 // Routes with parameters
-pathHandler.add {
+router.append {
     Literal("users")
     Parameter()
-} handler: { userID in
+} handler: { url, userID in
     push(UserViewController(userID: userID))
 }
 
 // Complex nested routes with multiple parameters
-pathHandler.add {
+router.append {
     Literal("users")
     Parameter()
     Literal("bookmarks")
     Parameter()
-} handler: { userID, bookmarkID in
+} handler: { url, params in
+    let (userID, bookmarkID) = params
     push(UserViewController(userID: userID))
     push(BookmarkViewController(bookmarkID: bookmarkID))
 }
 
 // Routes with optional parameters
-pathHandler.add {
+router.append {
     Literal("search")
     OptionalParameter()
-} handler: { query in
+} handler: { url, query in
     if let query = query {
         present(SearchViewController(query: query))
     } else {
@@ -154,8 +155,9 @@ pathHandler.add {
     }
 }
 
-// Handle incoming path
-pathHandler.handle(["users", "123", "bookmarks", "456"])
+// Handle incoming URL
+let url = URL(string: "https://example.com/users/123/bookmarks/456")!
+router.handle(url)
 ```
 
 ## Available Components
