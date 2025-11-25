@@ -1,5 +1,4 @@
 import Foundation
-@_exported import PathMatcher
 
 public struct PathRouter {
     private var handlers: [Handler<Any>] = []
