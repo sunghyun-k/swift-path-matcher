@@ -1,7 +1,6 @@
 import PathMatcher
 import SwiftUI
 
-@available(iOS 16.0, macOS 13.0, *)
 struct ContentView: View {
     @State private var path = NavigationPath()
     @State private var pathRouter: PathRouter!
@@ -28,16 +27,16 @@ struct ContentView: View {
 
         pathRouter = PathRouter()
         pathRouter.append {
-            Literal("users")
+            "users"
             Parameter()
         } handler: { _, userID in
             path.append(UserView.Destination(id: userID))
         }
 
         pathRouter.append {
-            Literal("users")
+            "users"
             Parameter()
-            Literal("posts")
+            "posts"
             Parameter()
         } handler: { _, params in
             let (userID, postID) = params
@@ -46,13 +45,13 @@ struct ContentView: View {
         }
 
         pathRouter.append {
-            Literal("settings")
+            "settings"
         } handler: { _, _ in
             path.append(SettingsView.Destination())
         }
 
         pathRouter.append {
-            Literal("search")
+            "search"
             OptionalParameter()
         } handler: { _, query in
             path.append(SearchView.Destination(query: query))
@@ -60,7 +59,6 @@ struct ContentView: View {
     }
 }
 
-@available(iOS 16.0, macOS 13.0, *)
 #Preview {
     ContentView()
 }
