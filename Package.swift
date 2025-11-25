@@ -6,24 +6,27 @@ let package = Package(
     products: [
         .library(
             name: "PathMatcher",
-            targets: ["PathMatcher"],
+            targets: ["PathMatcher"]
         ),
         .library(
             name: "Example",
-            targets: ["Example"],
+            targets: ["Example"]
         ),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
     ],
     targets: [
         .target(
-            name: "PathMatcher",
+            name: "PathMatcher"
         ),
         .target(
             name: "Example",
-            dependencies: ["PathMatcher"],
+            dependencies: ["PathMatcher"]
         ),
         .testTarget(
             name: "PathMatcherTests",
-            dependencies: ["PathMatcher"],
+            dependencies: ["PathMatcher"]
         ),
-    ],
+    ]
 )
