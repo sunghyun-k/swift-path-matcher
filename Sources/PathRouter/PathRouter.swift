@@ -1,19 +1,20 @@
 import Foundation
-import PathMatcher
+@_exported import PathMatcher
 
 public struct PathRouter {
     private var handlers: [Handler<Any>] = []
 
     public init() {}
 
-    public mutating func append<Output>(
-        @PathMatcherBuilder content: () -> PathMatcher<Output>,
-        handler: @escaping (URL, Output) -> Void,
+    public mutating func append<C: PathComponent>(
+        @PathMatcherBuilder content: () -> C,
+        handler: @escaping (URL, C.Output) -> Void,
     ) {
+        let matcher = PathMatcher { content() }
         handlers.append(Handler<Any>(
-            matcher: content().match(_:),
+            matcher: matcher.match(_:),
             handler: { url, output in
-                handler(url, output as! Output)
+                handler(url, output as! C.Output)
             },
         ))
     }

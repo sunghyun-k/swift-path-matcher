@@ -8,6 +8,10 @@ let package = Package(
             name: "PathMatcher",
             targets: ["PathMatcher", "PathRouter"],
         ),
+        .library(
+            name: "Example",
+            targets: ["Example"],
+        ),
     ],
     targets: [
         .target(
@@ -16,6 +20,10 @@ let package = Package(
         .target(
             name: "PathRouter",
             dependencies: ["PathMatcher"],
+        ),
+        .target(
+            name: "Example",
+            dependencies: ["PathRouter"],
         ),
         .testTarget(
             name: "PathMatcherTests",

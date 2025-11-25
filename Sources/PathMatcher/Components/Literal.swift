@@ -60,15 +60,15 @@ public struct Literal: PathComponent {
             guard index < components.endIndex else {
                 return nil
             }
-            
-            let matches = caseInsensitive ? 
+
+            let matches = caseInsensitive ?
                 components[index].lowercased() == value.lowercased() :
                 components[index] == value
-            
+
             guard matches else {
                 return nil
             }
-            
+
             index += 1
             return ()
         }

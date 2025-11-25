@@ -3,7 +3,6 @@ import Testing
 
 @Suite("PathMatcher Tests")
 struct PathMatcherTests {
-
     // MARK: - Literal Matching
 
     @Suite("Literal Matching")
@@ -43,7 +42,7 @@ struct PathMatcherTests {
                 ["Search"],
                 ["SEARCH"],
                 ["SeArCh"],
-            ]
+            ],
         )
         func caseInsensitiveMatching(components: [String]) {
             let matcher = PathMatcher {
@@ -70,7 +69,7 @@ struct PathMatcherTests {
                 ["Api", "v1", "users"],
                 ["api", "V1", "users"],
                 ["API", "v1", "users"],
-            ]
+            ],
         )
         func complexCaseInsensitiveMatching(components: [String]) {
             let matcher = PathMatcher {
