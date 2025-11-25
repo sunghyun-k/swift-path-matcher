@@ -45,4 +45,22 @@ public enum PathMatcherBuilder {
     public static func buildExpression<Component: PathComponent>(_ component: Component) -> Component {
         component
     }
+
+    /// Converts a string literal into a ``Literal`` component.
+    ///
+    /// This enables using string literals directly in the path matcher DSL:
+    ///
+    /// ```swift
+    /// let matcher: PathMatcher<String> = PathMatcher {
+    ///     "api"      // Automatically converted to Literal("api")
+    ///     "users"
+    ///     Parameter()
+    /// }
+    /// ```
+    ///
+    /// - Parameter value: The string to match as a literal path component.
+    /// - Returns: A ``Literal`` component matching the given string.
+    public static func buildExpression(_ value: String) -> Literal {
+        Literal(value)
+    }
 }

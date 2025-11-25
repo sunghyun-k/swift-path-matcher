@@ -29,7 +29,19 @@ import Foundation
 ///
 /// // Matches: ["api", "v2", "books"]
 /// ```
-public struct Literal: PathComponent {
+///
+/// ## String Literal Syntax
+///
+/// You can also use string literals directly in the path matcher:
+///
+/// ```swift
+/// let matcher: PathMatcher<String> = PathMatcher {
+///     "api"
+///     "users"
+///     Parameter()
+/// }
+/// ```
+public struct Literal: PathComponent, ExpressibleByStringLiteral {
     public typealias Output = Void
     private let segments: [String]
     private let caseInsensitive: Bool
@@ -56,6 +68,21 @@ public struct Literal: PathComponent {
     public init(_ value: String, caseInsensitive: Bool = false) {
         self.segments = value.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
         self.caseInsensitive = caseInsensitive
+    }
+
+    /// Creates a literal component from a string literal.
+    ///
+    /// This initializer enables the string literal syntax in path matchers:
+    ///
+    /// ```swift
+    /// let matcher: PathMatcher<String> = PathMatcher {
+    ///     "api"      // Same as Literal("api")
+    ///     "users"    // Same as Literal("users")
+    ///     Parameter()
+    /// }
+    /// ```
+    public init(stringLiteral value: String) {
+        self.init(value)
     }
 
     /// The pattern implementation for this literal component.
