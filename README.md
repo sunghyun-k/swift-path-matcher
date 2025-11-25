@@ -4,7 +4,7 @@
 
 ```swift
 let matcher: PathMatcher<(String, String?)> = PathMatcher {
-    Literal("users")
+    "users"
     Parameter()           // required: user ID
     OptionalParameter()   // optional: additional path
 }
@@ -27,7 +27,8 @@ dependencies: [
 
 | Component | Description | Output Type |
 |-----------|-------------|-------------|
-| `Literal("path")` | Matches exact string | `Void` |
+| `"path"` | Matches exact string (String Literal) | `Void` |
+| `Literal("path")` | Matches exact string (explicit) | `Void` |
 | `Parameter()` | Captures required path segment | `String` |
 | `OptionalParameter()` | Captures optional segment | `String?` |
 
@@ -39,23 +40,45 @@ dependencies: [
 import PathMatcher
 
 let searchMatcher: PathMatcher<Void> = PathMatcher {
-    Literal("search")
+    "search"
 }
 
 searchMatcher.match(["search"])  // () - success
 searchMatcher.match(["profile"]) // nil - failure
 ```
 
-### Multi-Segment Literals
+### String Literal Syntax
 
-`Literal` can match multiple segments separated by `/`:
+You can use string literals directly instead of `Literal()`:
 
 ```swift
-// Both matchers work identically
-let matcher1 = PathMatcher { Literal("api"); Literal("v2"); Literal("books") }
-let matcher2 = PathMatcher { Literal("api/v2/books") }
+// These two matchers are equivalent
+let matcher1: PathMatcher<String> = PathMatcher {
+    Literal("api")
+    Literal("users")
+    Parameter()
+}
 
-// Both match ["api", "v2", "books"]
+let matcher2: PathMatcher<String> = PathMatcher {
+    "api"
+    "users"
+    Parameter()
+}
+```
+
+Use explicit `Literal()` when you need case-insensitive matching.
+
+### Multi-Segment Literals
+
+String literals can match multiple segments separated by `/`:
+
+```swift
+// All three matchers work identically
+let matcher1 = PathMatcher { "api"; "v2"; "books" }
+let matcher2 = PathMatcher { "api/v2/books" }
+let matcher3 = PathMatcher { Literal("api/v2/books") }
+
+// All match ["api", "v2", "books"]
 ```
 
 ### Case-Insensitive Matching
@@ -75,7 +98,7 @@ matcher.match(["Api", "v2"])   // success
 ```swift
 // Pattern: "owners/:owner"
 let ownerMatcher: PathMatcher<String> = PathMatcher {
-    Literal("owners")
+    "owners"
     Parameter()
 }
 
@@ -89,9 +112,9 @@ Multiple parameters are automatically flattened into tuples:
 ```swift
 // Pattern: "users/:userId/posts/:postId"
 let postMatcher: PathMatcher<(String, String)> = PathMatcher {
-    Literal("users")
+    "users"
     Parameter()      // userId
-    Literal("posts")
+    "posts"
     Parameter()      // postId
 }
 
@@ -104,7 +127,7 @@ let result = postMatcher.match(["users", "john", "posts", "123"])
 ```swift
 // Pattern: "owners/:owner/:repo?"
 let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-    Literal("owners")
+    "owners"
     Parameter()         // required
     OptionalParameter() // optional
 }
@@ -121,20 +144,20 @@ Register multiple path patterns and route URLs:
 var router = PathRouter()
 
 router.append {
-    Literal("settings")
+    "settings"
 } handler: { url, _ in
     showSettings()
 }
 
 router.append {
-    Literal("users")
+    "users"
     Parameter()
 } handler: { url, userID in
     showUser(id: userID)
 }
 
 router.append {
-    Literal("posts")
+    "posts"
     Parameter()
     OptionalParameter()
 } handler: { url, params in
@@ -168,7 +191,7 @@ struct IntParameter: PathComponent {
 
 // Usage
 let matcher: PathMatcher<Int> = PathMatcher {
-    Literal("posts")
+    "posts"
     IntParameter()  // matches integers only
 }
 

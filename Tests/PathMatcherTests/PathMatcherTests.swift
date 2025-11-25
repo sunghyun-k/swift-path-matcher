@@ -152,6 +152,43 @@ struct PathMatcherTests {
             let result = matcher.match(["api", "v2", "users", "john"])
             #expect(result == "john")
         }
+
+        @Test("String literal syntax")
+        func stringLiteralSyntax() {
+            let matcher: PathMatcher<String> = PathMatcher {
+                "api"
+                "v1"
+                "users"
+                Parameter()
+            }
+
+            let result = matcher.match(["api", "v1", "users", "john"])
+            #expect(result == "john")
+            #expect(matcher.match(["api", "v2", "users", "john"]) == nil)
+        }
+
+        @Test("String literal with path separator")
+        func stringLiteralWithPathSeparator() {
+            let matcher: PathMatcher<Void> = PathMatcher {
+                "api/v2/books"
+            }
+
+            #expect(matcher.match(["api", "v2", "books"]) != nil)
+            #expect(matcher.match(["api", "v2"]) == nil)
+        }
+
+        @Test("Mixed string literals and explicit Literal")
+        func mixedStringAndExplicitLiteral() {
+            let matcher: PathMatcher<String> = PathMatcher {
+                "api"
+                Literal("users", caseInsensitive: true)
+                Parameter()
+            }
+
+            #expect(matcher.match(["api", "users", "john"]) == "john")
+            #expect(matcher.match(["api", "USERS", "jane"]) == "jane")
+            #expect(matcher.match(["API", "users", "john"]) == nil) // "api" is case sensitive
+        }
     }
 
     // MARK: - Parameter Matching
