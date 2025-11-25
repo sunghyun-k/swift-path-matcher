@@ -3,283 +3,330 @@ import Testing
 
 @Suite("PathMatcher Tests")
 struct PathMatcherTests {
-    @Test("Basic literal matching")
-    func literalMatching() {
-        // search
-        let searchComps = ["search"]
-        let searchMatcher: PathMatcher<Void> = PathMatcher {
-            Literal("search")
-        }
-        let searchResult = searchMatcher.match(searchComps)
-        #expect(searchResult != nil, "Search should match")
 
-        // profile (correct matching)
-        let profileComps = ["profile"]
-        let profileMatcher: PathMatcher<Void> = PathMatcher {
-            Literal("profile")
-        }
-        let profileResult = profileMatcher.match(profileComps)
-        #expect(profileResult != nil, "Profile should match with correct components")
+    // MARK: - Literal Matching
 
-        // profile (wrong matching test)
-        let profileWrongResult = profileMatcher.match(searchComps)
-        #expect(profileWrongResult == nil, "Profile should not match with search components")
+    @Suite("Literal Matching")
+    struct LiteralMatchingTests {
+        @Test("Basic literal matching")
+        func basicMatching() {
+            let searchMatcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(searchMatcher.match(["search"]) != nil)
+            #expect(searchMatcher.match(["profile"]) == nil)
+
+            let profileMatcher = PathMatcher {
+                Literal("profile")
+            }
+
+            #expect(profileMatcher.match(["profile"]) != nil)
+            #expect(profileMatcher.match(["search"]) == nil)
+        }
+
+        @Test("Case sensitive matching (default)")
+        func caseSensitiveMatching() {
+            let matcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(matcher.match(["search"]) != nil)
+            #expect(matcher.match(["Search"]) == nil)
+            #expect(matcher.match(["SEARCH"]) == nil)
+        }
+
+        @Test(
+            "Case insensitive matching",
+            arguments: [
+                ["search"],
+                ["Search"],
+                ["SEARCH"],
+                ["SeArCh"],
+            ]
+        )
+        func caseInsensitiveMatching(components: [String]) {
+            let matcher = PathMatcher {
+                Literal("search", caseInsensitive: true)
+            }
+
+            #expect(matcher.match(components) != nil)
+        }
+
+        @Test("Case insensitive should not match different words")
+        func caseInsensitiveDifferentWords() {
+            let matcher = PathMatcher {
+                Literal("search", caseInsensitive: true)
+            }
+
+            #expect(matcher.match(["profile"]) == nil)
+        }
+
+        @Test(
+            "Complex case insensitive matching",
+            arguments: [
+                ["api", "v1", "users"],
+                ["API", "V1", "users"],
+                ["Api", "v1", "users"],
+                ["api", "V1", "users"],
+                ["API", "v1", "users"],
+            ]
+        )
+        func complexCaseInsensitiveMatching(components: [String]) {
+            let matcher = PathMatcher {
+                Literal("api", caseInsensitive: true)
+                Literal("v1", caseInsensitive: true)
+                Parameter()
+            }
+
+            let result = matcher.match(components)
+            #expect(result == "users")
+        }
+
+        @Test("Case insensitive should not match wrong literals")
+        func caseInsensitiveWrongLiteral() {
+            let matcher = PathMatcher {
+                Literal("api", caseInsensitive: true)
+                Literal("v1", caseInsensitive: true)
+                Parameter()
+            }
+
+            #expect(matcher.match(["wrong", "v1", "users"]) == nil)
+        }
     }
 
-    @Test("Parameter matching")
-    func parameterMatching() {
-        // owners/:owner
-        let ownerComps = ["owners", "swiftlang"]
-        let ownerMatcher: PathMatcher<String> = PathMatcher {
-            Literal("owners")
-            Parameter() // owner
+    // MARK: - Parameter Matching
+
+    @Suite("Parameter Matching")
+    struct ParameterMatchingTests {
+        @Test("Single parameter matching")
+        func singleParameter() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+            }
+
+            let result = matcher.match(["owners", "swiftlang"])
+            #expect(result == "swiftlang")
         }
-        let ownerResult = ownerMatcher.match(ownerComps)
-        #expect(ownerResult == "swiftlang", "Should capture parameter value")
+
+        @Test("Optional parameter with value present")
+        func optionalParameterPresent() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+                OptionalParameter()
+            }
+
+            let result = matcher.match(["owners", "swiftlang", "swift"])
+            #expect(result?.0 == "swiftlang")
+            #expect(result?.1 == "swift")
+        }
+
+        @Test("Optional parameter with value absent")
+        func optionalParameterAbsent() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+                OptionalParameter()
+            }
+
+            let result = matcher.match(["owners", "swiftlang"])
+            #expect(result?.0 == "swiftlang")
+            #expect(result?.1 == nil)
+        }
+
+        @Test("Multiple optional parameters")
+        func multipleOptionalParameters() {
+            let matcher = PathMatcher {
+                Literal("api")
+                Literal("v1")
+                OptionalParameter()
+                OptionalParameter()
+                OptionalParameter()
+            }
+
+            // All parameters present
+            let allPresent = matcher.match(["api", "v1", "users", "123", "edit"])
+            #expect(allPresent?.0 == "users")
+            #expect(allPresent?.1 == "123")
+            #expect(allPresent?.2 == "edit")
+
+            // Partial parameters
+            let partial = matcher.match(["api", "v1", "users", "123"])
+            #expect(partial?.0 == "users")
+            #expect(partial?.1 == "123")
+            #expect(partial?.2 == nil)
+
+            // Single parameter
+            let single = matcher.match(["api", "v1", "users"])
+            #expect(single?.0 == "users")
+            #expect(single?.1 == nil)
+            #expect(single?.2 == nil)
+
+            // No parameters
+            let none = matcher.match(["api", "v1"])
+            #expect(none?.0 == nil)
+            #expect(none?.1 == nil)
+            #expect(none?.2 == nil)
+        }
+
+        @Test("Complex path with mixed components")
+        func complexPath() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+                Literal("repos")
+            }
+
+            let result = matcher.match(["owners", "123", "repos"])
+            #expect(result == "123")
+        }
     }
 
-    @Test("Optional parameter matching with both parameters")
-    func optionalParameterMatchingWithBoth() {
-        // owners/:owner/:repo (repo 있는 경우)
-        let repoComps = ["owners", "swiftlang", "swift"]
-        let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("owners")
-            Parameter() // owner
-            OptionalParameter() // repo
+    // MARK: - Non-matching Paths
+
+    @Suite("Non-matching Paths")
+    struct NonMatchingTests {
+        @Test("Too many components")
+        func tooManyComponents() {
+            let matcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(matcher.match(["search", "extra"]) == nil)
         }
-        let repoResult = repoMatcher.match(repoComps)
-        #expect(repoResult?.0 == "swiftlang", "Should capture owner parameter")
-        #expect(repoResult?.1 == "swift", "Should capture optional repo parameter")
+
+        @Test("Too few components")
+        func tooFewComponents() {
+            let matcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(matcher.match([]) == nil)
+        }
+
+        @Test("Wrong component")
+        func wrongComponent() {
+            let matcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(matcher.match(["profile"]) == nil)
+        }
     }
 
-    @Test("Optional parameter matching without optional parameter")
-    func optionalParameterMatchingWithoutOptional() {
-        // owners/:owner/:repo (repo 없는 경우)
-        let ownerComps = ["owners", "swiftlang"]
-        let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("owners")
-            Parameter() // owner
-            OptionalParameter() // repo
+    // MARK: - Empty Path Matching
+
+    @Suite("Empty Path Matching")
+    struct EmptyPathTests {
+        @Test("Empty matcher matches empty path")
+        func emptyMatcherEmptyPath() {
+            let matcher = PathMatcher {}
+
+            #expect(matcher.match([]) != nil)
         }
-        let repoResult = repoMatcher.match(ownerComps)
-        #expect(repoResult?.0 == "swiftlang", "Should capture owner parameter")
-        #expect(repoResult?.1 == nil, "Optional repo parameter should be nil")
+
+        @Test("Empty matcher does not match non-empty path")
+        func emptyMatcherNonEmptyPath() {
+            let matcher = PathMatcher {}
+
+            #expect(matcher.match(["something"]) == nil)
+        }
     }
 
-    @Test("Multiple optional parameters - all present")
-    func multipleOptionalParametersAllPresent() {
-        // api/v1/:resource?/:id?/:action?
-        let apiMatcher: PathMatcher<(String?, String?, String?)> = PathMatcher {
-            Literal("api")
-            Literal("v1")
-            OptionalParameter() // resource
-            OptionalParameter() // id
-            OptionalParameter() // action
+    // MARK: - Edge Cases
+
+    @Suite("Edge Cases")
+    struct EdgeCaseTests {
+        @Test("Empty string component")
+        func emptyStringComponent() {
+            let matcher = PathMatcher {
+                Literal("search")
+            }
+
+            #expect(matcher.match([""]) == nil)
+            #expect(matcher.match(["", "search"]) == nil)
         }
 
-        // 모든 파라미터가 있는 경우
-        let apiComps1 = ["api", "v1", "users", "123", "edit"]
-        let apiResult1 = apiMatcher.match(apiComps1)
-        #expect(apiResult1?.0 == "users", "Should capture resource parameter")
-        #expect(apiResult1?.1 == "123", "Should capture id parameter")
-        #expect(apiResult1?.2 == "edit", "Should capture action parameter")
+        @Test("Special characters in path")
+        func specialCharacters() {
+            let matcher = PathMatcher {
+                Literal("users")
+                Parameter()
+            }
+
+            #expect(matcher.match(["users", "user%20name"]) == "user%20name")
+            #expect(matcher.match(["users", "user@example.com"]) == "user@example.com")
+            #expect(matcher.match(["users", "user+tag"]) == "user+tag")
+        }
+
+        @Test("Unicode characters in path")
+        func unicodeCharacters() {
+            let matcher = PathMatcher {
+                Literal("users")
+                Parameter()
+            }
+
+            #expect(matcher.match(["users", "사용자"]) == "사용자")
+            #expect(matcher.match(["users", "ユーザー"]) == "ユーザー")
+            #expect(matcher.match(["users", "🚀"]) == "🚀")
+        }
+
+        @Test("Unicode literal matching")
+        func unicodeLiteral() {
+            let matcher = PathMatcher {
+                Literal("사용자")
+            }
+
+            #expect(matcher.match(["사용자"]) != nil)
+            #expect(matcher.match(["users"]) == nil)
+        }
+
+        @Test("Long path matching")
+        func longPath() {
+            let matcher = PathMatcher {
+                Literal("a")
+                Literal("b")
+                Literal("c")
+                Literal("d")
+                Parameter()
+            }
+
+            let result = matcher.match(["a", "b", "c", "d", "value"])
+            #expect(result == "value")
+        }
     }
 
-    @Test("Multiple optional parameters - partial")
-    func multipleOptionalParametersPartial() {
-        let apiMatcher: PathMatcher<(String?, String?, String?)> = PathMatcher {
-            Literal("api")
-            Literal("v1")
-            OptionalParameter() // resource
-            OptionalParameter() // id
-            OptionalParameter() // action
+    // MARK: - Real World Examples
+
+    @Suite("Real World Examples")
+    struct RealWorldTests {
+        @Test("GitHub style owner path")
+        func gitHubOwnerPath() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+            }
+
+            #expect(matcher.match(["owners", "swiftlang"]) == "swiftlang")
         }
 
-        // 일부 파라미터만 있는 경우
-        let apiComps2 = ["api", "v1", "users", "123"]
-        let apiResult2 = apiMatcher.match(apiComps2)
-        #expect(apiResult2?.0 == "users", "Should capture resource parameter")
-        #expect(apiResult2?.1 == "123", "Should capture id parameter")
-        #expect(apiResult2?.2 == nil, "Action parameter should be nil")
-    }
+        @Test("GitHub style repository path")
+        func gitHubRepositoryPath() {
+            let matcher = PathMatcher {
+                Literal("owners")
+                Parameter()
+                OptionalParameter()
+            }
 
-    @Test("Multiple optional parameters - single")
-    func multipleOptionalParametersSingle() {
-        let apiMatcher: PathMatcher<(String?, String?, String?)> = PathMatcher {
-            Literal("api")
-            Literal("v1")
-            OptionalParameter() // resource
-            OptionalParameter() // id
-            OptionalParameter() // action
+            let withRepo = matcher.match(["owners", "swiftlang", "swift"])
+            #expect(withRepo?.0 == "swiftlang")
+            #expect(withRepo?.1 == "swift")
+
+            let withoutRepo = matcher.match(["owners", "swiftlang"])
+            #expect(withoutRepo?.0 == "swiftlang")
+            #expect(withoutRepo?.1 == nil)
         }
-
-        // 하나의 파라미터만 있는 경우
-        let apiComps3 = ["api", "v1", "users"]
-        let apiResult3 = apiMatcher.match(apiComps3)
-        #expect(apiResult3?.0 == "users", "Should capture resource parameter")
-        #expect(apiResult3?.1 == nil, "Id parameter should be nil")
-        #expect(apiResult3?.2 == nil, "Action parameter should be nil")
-    }
-
-    @Test("Multiple optional parameters - none")
-    func multipleOptionalParametersNone() {
-        let apiMatcher: PathMatcher<(String?, String?, String?)> = PathMatcher {
-            Literal("api")
-            Literal("v1")
-            OptionalParameter() // resource
-            OptionalParameter() // id
-            OptionalParameter() // action
-        }
-
-        // 파라미터가 없는 경우
-        let apiComps4 = ["api", "v1"]
-        let apiResult4 = apiMatcher.match(apiComps4)
-        #expect(apiResult4?.0 == nil, "Resource parameter should be nil")
-        #expect(apiResult4?.1 == nil, "Id parameter should be nil")
-        #expect(apiResult4?.2 == nil, "Action parameter should be nil")
-    }
-
-    @Test("Non-matching paths")
-    func nonMatchingPaths() {
-        let searchMatcher: PathMatcher<Void> = PathMatcher {
-            Literal("search")
-        }
-
-        // Too many components
-        let tooManyResult = searchMatcher.match(["search", "extra"])
-        #expect(tooManyResult == nil, "Should not match with extra components")
-
-        // Too few components
-        let tooFewResult = searchMatcher.match([])
-        #expect(tooFewResult == nil, "Should not match with no components")
-
-        // Wrong component
-        let wrongResult = searchMatcher.match(["profile"])
-        #expect(wrongResult == nil, "Should not match with wrong component")
-    }
-
-    @Test("Empty path matching")
-    func emptyPathMatching() {
-        let emptyMatcher: PathMatcher<Void> = PathMatcher {
-            // Empty matcher
-        }
-        let emptyResult = emptyMatcher.match([])
-        #expect(emptyResult != nil, "Empty matcher should match empty path")
-
-        // Should not match non-empty path
-        let nonEmptyResult = emptyMatcher.match(["something"])
-        #expect(nonEmptyResult == nil, "Empty matcher should not match non-empty path")
-    }
-
-    @Test("Complex path matching - simpler version")
-    func complexPathMatching() {
-        // Simpler path: owners/:ownerId/repos
-        let complexMatcher: PathMatcher<String> = PathMatcher {
-            Literal("owners")
-            Parameter() // ownerId
-            Literal("repos")
-        }
-
-        let complexComps = ["owners", "123", "repos"]
-        let complexResult = complexMatcher.match(complexComps)
-        #expect(complexResult == "123", "Should capture ownerId parameter")
-    }
-
-    @Test("Real world example - GitHub style paths")
-    func gitHubStylePaths() {
-        // owners/:owner (GitHub owner profile)
-        let ownerComps = ["owners", "swiftlang"]
-        let ownerMatcher: PathMatcher<String> = PathMatcher {
-            Literal("owners")
-            Parameter() // owner
-        }
-        let ownerResult = ownerMatcher.match(ownerComps)
-        #expect(ownerResult == "swiftlang", "Should capture 'swiftlang' as owner")
-
-        // owners/:owner/:repo (GitHub repository)
-        let repoComps = ["owners", "swiftlang", "swift"]
-        let repoMatcher: PathMatcher<(String, String?)> = PathMatcher {
-            Literal("owners")
-            Parameter() // owner
-            OptionalParameter() // repo
-        }
-        let repoResult = repoMatcher.match(repoComps)
-        #expect(repoResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
-        #expect(repoResult?.1 == "swift", "Should capture 'swift' as repo")
-
-        // owners/:owner without repo
-        let ownerOnlyResult = repoMatcher.match(ownerComps)
-        #expect(ownerOnlyResult?.0 == "swiftlang", "Should capture 'swiftlang' as owner")
-        #expect(ownerOnlyResult?.1 == nil, "Repo should be nil when not provided")
-    }
-
-    @Test("Case insensitive literal matching")
-    func caseInsensitiveLiteralMatching() {
-        // Case sensitive (default behavior)
-        let caseSensitiveMatcher: PathMatcher<Void> = PathMatcher {
-            Literal("search")
-        }
-        
-        // Should match exact case
-        let exactResult = caseSensitiveMatcher.match(["search"])
-        #expect(exactResult != nil, "Should match exact case")
-        
-        // Should not match different case
-        let upperResult = caseSensitiveMatcher.match(["Search"])
-        #expect(upperResult == nil, "Should not match different case by default")
-        
-        let lowerResult = caseSensitiveMatcher.match(["SEARCH"])
-        #expect(lowerResult == nil, "Should not match uppercase when expecting lowercase")
-        
-        // Case insensitive matcher
-        let caseInsensitiveMatcher: PathMatcher<Void> = PathMatcher {
-            Literal("search", caseInsensitive: true)
-        }
-        
-        // Should match exact case
-        let exactInsensitiveResult = caseInsensitiveMatcher.match(["search"])
-        #expect(exactInsensitiveResult != nil, "Should match exact case even when case insensitive")
-        
-        // Should match different cases
-        let upperInsensitiveResult = caseInsensitiveMatcher.match(["Search"])
-        #expect(upperInsensitiveResult != nil, "Should match capitalized version")
-        
-        let allUpperResult = caseInsensitiveMatcher.match(["SEARCH"])
-        #expect(allUpperResult != nil, "Should match uppercase version")
-        
-        let mixedCaseResult = caseInsensitiveMatcher.match(["SeArCh"])
-        #expect(mixedCaseResult != nil, "Should match mixed case version")
-        
-        // Should still not match different words
-        let wrongWordResult = caseInsensitiveMatcher.match(["profile"])
-        #expect(wrongWordResult == nil, "Should not match different words")
-    }
-
-    @Test("Complex case insensitive matching")
-    func complexCaseInsensitiveMatching() {
-        // Multiple literals with case insensitive
-        let apiMatcher: PathMatcher<String> = PathMatcher {
-            Literal("api", caseInsensitive: true)
-            Literal("v1", caseInsensitive: true)
-            Parameter() // resource
-        }
-        
-        // Test various case combinations
-        let testCases = [
-            ["api", "v1", "users"],
-            ["API", "V1", "users"],
-            ["Api", "v1", "users"],
-            ["api", "V1", "users"],
-            ["API", "v1", "users"]
-        ]
-        
-        for (index, testCase) in testCases.enumerated() {
-            let result = apiMatcher.match(testCase)
-            #expect(result == "users", "Test case \(index + 1) should match and capture 'users'")
-        }
-        
-        // Should not match wrong literals
-        let wrongResult = apiMatcher.match(["wrong", "v1", "users"])
-        #expect(wrongResult == nil, "Should not match wrong first literal")
     }
 }
