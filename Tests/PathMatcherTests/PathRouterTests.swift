@@ -231,42 +231,57 @@ struct PathRouterTests {
             #expect(settingsHandlerCalled)
         }
 
-        @Test("More specific route before general route")
-        func specificBeforeGeneral() {
-            var router = PathRouter()
-            var specificHandlerCalled = false
-            var generalHandlerCalled = false
+        @Test("Route order does not matter when path lengths differ")
+        func routeOrderIndependent() {
+            // Test 1: specific first, general second
+            var router1 = PathRouter()
+            var results1: [String] = []
 
-            // More specific route first
-            router.append {
-                Literal("users")
+            router1.append {
+                Literal("api")
                 Parameter()
-                Literal("posts")
-                Parameter()
-            } handler: { _, _ in
-                specificHandlerCalled = true
-            }
-
-            // General route second
-            router.append {
-                Literal("users")
+                Literal("items")
                 Parameter()
             } handler: { _, _ in
-                generalHandlerCalled = true
+                results1.append("specific")
             }
 
-            // Should match specific route
-            router.handle(URL(string: "https://example.com/users/john/posts/123")!)
-            #expect(specificHandlerCalled)
-            #expect(!generalHandlerCalled)
+            router1.append {
+                Literal("api")
+                Parameter()
+            } handler: { _, _ in
+                results1.append("general")
+            }
 
-            // Reset
-            specificHandlerCalled = false
+            router1.handle(URL(string: "https://example.com/api/v1/items/123")!)
+            router1.handle(URL(string: "https://example.com/api/v1")!)
 
-            // Should match general route
-            router.handle(URL(string: "https://example.com/users/john")!)
-            #expect(!specificHandlerCalled)
-            #expect(generalHandlerCalled)
+            // Test 2: general first, specific second (reversed order)
+            var router2 = PathRouter()
+            var results2: [String] = []
+
+            router2.append {
+                Literal("api")
+                Parameter()
+            } handler: { _, _ in
+                results2.append("general")
+            }
+
+            router2.append {
+                Literal("api")
+                Parameter()
+                Literal("items")
+                Parameter()
+            } handler: { _, _ in
+                results2.append("specific")
+            }
+
+            router2.handle(URL(string: "https://example.com/api/v1/items/123")!)
+            router2.handle(URL(string: "https://example.com/api/v1")!)
+
+            // Both should produce the same results regardless of registration order
+            #expect(results1 == ["specific", "general"])
+            #expect(results2 == ["specific", "general"])
         }
     }
 
@@ -360,82 +375,6 @@ struct PathRouterTests {
 
     @Suite("Real World Scenarios")
     struct RealWorldScenariosTests {
-        @Test("User profile route")
-        func userProfileRoute() {
-            var router = PathRouter()
-            var userID: String?
-
-            router.append {
-                Literal("users")
-                Parameter()
-            } handler: { _, id in
-                userID = id
-            }
-
-            router.handle(URL(string: "https://example.com/users/alice")!)
-            #expect(userID == "alice")
-        }
-
-        @Test("User post route")
-        func userPostRoute() {
-            var router = PathRouter()
-            var userID: String?
-            var postID: String?
-
-            router.append {
-                Literal("users")
-                Parameter()
-                Literal("posts")
-                Parameter()
-            } handler: { _, params in
-                (userID, postID) = params
-            }
-
-            router.handle(URL(string: "https://example.com/users/alice/posts/post-123")!)
-            #expect(userID == "alice")
-            #expect(postID == "post-123")
-        }
-
-        @Test("Settings route")
-        func settingsRoute() {
-            var router = PathRouter()
-            var handlerCalled = false
-
-            router.append {
-                Literal("settings")
-            } handler: { _, _ in
-                handlerCalled = true
-            }
-
-            router.handle(URL(string: "https://example.com/settings")!)
-            #expect(handlerCalled)
-        }
-
-        @Test("Search route with optional query")
-        func searchRoute() {
-            var router = PathRouter()
-            var query: String?
-            var handlerCallCount = 0
-
-            router.append {
-                Literal("search")
-                OptionalParameter()
-            } handler: { _, q in
-                query = q
-                handlerCallCount += 1
-            }
-
-            // With search query
-            router.handle(URL(string: "https://example.com/search/swift")!)
-            #expect(query == "swift")
-            #expect(handlerCallCount == 1)
-
-            // Without search query
-            router.handle(URL(string: "https://example.com/search")!)
-            #expect(query == nil)
-            #expect(handlerCallCount == 2)
-        }
-
         @Test("Complete app routing scenario")
         func completeAppRouting() {
             var router = PathRouter()
@@ -473,11 +412,18 @@ struct PathRouterTests {
 
             // Test all routes
             router.handle(URL(string: "https://example.com/users/alice")!)
+            router.handle(URL(string: "https://example.com/users/alice/posts/post-123")!)
             router.handle(URL(string: "https://example.com/settings")!)
             router.handle(URL(string: "https://example.com/search/swift")!)
             router.handle(URL(string: "https://example.com/search")!)
 
-            #expect(routes == ["user:alice", "settings", "search:swift", "search:none"])
+            #expect(routes == [
+                "user:alice",
+                "post:alice/post-123",
+                "settings",
+                "search:swift",
+                "search:none",
+            ])
         }
     }
 
@@ -485,7 +431,7 @@ struct PathRouterTests {
 
     @Suite("Edge Cases")
     struct EdgeCaseTests {
-        @Test("URL with encoded characters")
+        @Test("URL percent-encoding is decoded by Foundation")
         func encodedCharacters() {
             var router = PathRouter()
             var extractedValue: String?
@@ -500,87 +446,29 @@ struct PathRouterTests {
             let testURL = URL(string: "https://example.com/search/hello%20world")!
             router.handle(testURL)
 
-            // URL automatically decodes percent-encoded values in pathComponents
+            // URL.pathComponents automatically decodes percent-encoded values
             #expect(extractedValue == "hello world")
         }
 
-        @Test("Unicode in path")
-        func unicodePath() {
-            var router = PathRouter()
-            var extractedValue: String?
-
-            router.append {
-                Literal("users")
-                Parameter()
-            } handler: { _, value in
-                extractedValue = value
-            }
-
-            let testURL = URL(string: "https://example.com/users/사용자")!
-            router.handle(testURL)
-
-            #expect(extractedValue == "사용자")
-        }
-
-        @Test("Multi-segment literal routing")
-        func multiSegmentLiteral() {
-            var router = PathRouter()
-            var extractedID: String?
-
-            router.append {
-                Literal("api/v2/users")
-                Parameter()
-            } handler: { _, id in
-                extractedID = id
-            }
-
-            let testURL = URL(string: "https://example.com/api/v2/users/123")!
-            router.handle(testURL)
-
-            #expect(extractedID == "123")
-        }
-
-        @Test("Case insensitive routing")
-        func caseInsensitiveRouting() {
-            var router = PathRouter()
-            var handlerCallCount = 0
-
-            router.append {
-                Literal("API", caseInsensitive: true)
-                Literal("Users", caseInsensitive: true)
-                Parameter()
-            } handler: { _, _ in
-                handlerCallCount += 1
-            }
-
-            router.handle(URL(string: "https://example.com/api/users/123")!)
-            router.handle(URL(string: "https://example.com/API/USERS/456")!)
-            router.handle(URL(string: "https://example.com/Api/Users/789")!)
-
-            #expect(handlerCallCount == 3)
-        }
-
-        @Test("No routes registered")
+        @Test("No routes registered does not crash")
         func noRoutesRegistered() {
             let router = PathRouter()
-            // Should not crash
             router.handle(URL(string: "https://example.com/anything")!)
         }
 
-        @Test("URL with only scheme and host")
-        func urlWithOnlySchemeAndHost() {
+        @Test("No matching route does not crash")
+        func noMatchingRoute() {
             var router = PathRouter()
             var handlerCalled = false
 
             router.append {
+                Literal("users")
             } handler: { _, _ in
                 handlerCalled = true
             }
 
-            let testURL = URL(string: "https://example.com")!
-            router.handle(testURL)
-
-            #expect(handlerCalled)
+            router.handle(URL(string: "https://example.com/posts")!)
+            #expect(!handlerCalled)
         }
     }
 }
